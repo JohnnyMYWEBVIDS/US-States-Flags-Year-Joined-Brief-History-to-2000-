@@ -544,10 +544,12 @@ playBtn.onclick = ()=>{
   } else playTimeline(); 
 };
 
-search.addEventListener('input', renderTiles);
-sortSel.addEventListener('change', ()=>{ renderTiles(); });
+/* =========================
+   Add custom state (Firebase + UI)
+   ========================= */
+import { getFirestore, doc, setDoc } from "firebase/firestore"; // add at top with your imports
+const db = getFirestore(app);
 
-/* Add custom state — saved to Firebase */
 async function addCustomState(){
   const name = document.getElementById('a-name').value.trim();
   const abbr = document.getElementById('a-abbr').value.trim().toUpperCase();
@@ -556,30 +558,34 @@ async function addCustomState(){
   const history = document.getElementById('a-history').value.trim();
 
   if(!name || !/^[A-Z]{2}$/.test(abbr) || !year){
-    alert("Please enter name, 2-letter abbreviation, and year."); 
-    return; 
-  }
-
-  // Save to Firebase Firestore
-  try{
-    await setDoc(doc(db, "states", abbr), {
-      name, abbr, year, flag, history
-    });
-  } catch(e){
-    console.error("Firebase save failed:", e);
-    alert("Failed to save state to Firebase. Check console.");
+    alert("Please enter name, 2-letter abbreviation, and year.");
     return;
   }
 
-  // Update local cache
+  const entry = { name, abbr, year, flag, history };
+
+  try {
+    // Save to Firebase (Firestore) under collection "customStates"
+    await setDoc(doc(db, "customStates", abbr), entry);
+    console.log("Saved to Firebase:", entry);
+  } catch(e) {
+    console.error("Firebase save failed:", e);
+  }
+
+  // Also save locally so UI updates immediately
+  const custom = loadCustom();
+  const idx = custom.findIndex(s=>s.abbr===abbr);
+  if(idx>=0) custom[idx] = entry; else custom.push(entry);
+  saveCustom(custom);
+
   if(history){ BIOS[abbr] = history; saveBios(BIOS); }
 
   refreshStates();
   renderTiles();
-  if(stateByAbbr(abbr)){ 
-    focusAbbr = abbr; 
-    renderDetails(stateByAbbr(abbr)); 
-    highlightFocus(); 
+  if(stateByAbbr(abbr)){
+    focusAbbr = abbr;
+    renderDetails(stateByAbbr(abbr));
+    highlightFocus();
   }
   addModal.close();
 
