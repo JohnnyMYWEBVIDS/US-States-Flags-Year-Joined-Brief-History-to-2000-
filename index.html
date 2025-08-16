@@ -10,6 +10,9 @@
     --brand:#60a5fa; --accent:#22d3ee; --ok:#34d399; --warn:#f59e0b;
     --tile:#111827; --tile-border:#1f2937; --focus:#fef08a;
   }
+
+import { getFirestore, doc, setDoc } from "firebase/firestore";
+  
   *{box-sizing:border-box}
   html,body{margin:0;height:100%}
   body{
@@ -17,9 +20,14 @@
     background: radial-gradient(1200px 800px at 70% -10%, #1f2937 0%, var(--bg) 45%, #0b1024 100%);
     color: var(--text);
   }
+
+const analytics = getAnalytics(app);
+const db = getFirestore(app);
+  
   header{
     padding:20px 16px 8px; display:flex; flex-wrap:wrap; align-items:center; gap:12px; justify-content:space-between;
   }
+
   .title{display:flex;align-items:center;gap:12px;font-weight:800;font-size:clamp(18px,4vw,26px)}
   .title .dot{width:10px;height:10px;border-radius:999px;background:linear-gradient(45deg,var(--brand),var(--accent));box-shadow:0 0 12px var(--brand)}
   .sub{font-size:12px;color:var(--muted)}
@@ -261,7 +269,7 @@ function saveBios(obj){ localStorage.setItem(LS_BIO, JSON.stringify(obj||{})); }
    ========================= */
 const STATES_BASE = [
   {name:"Delaware", abbr:"DE", year:1787, flag:"delaware.jpg"},
-  {name:"Pennsylvania", abbr:"PA", year:1787, flag:"MG_4160.png"},
+  {name:"Pennsylvania", abbr:"PA", year:1787, flag:"IMG_4160.png"},
   {name:"New Jersey", abbr:"NJ", year:1787, flag:"IMG_4152.png"},
   {name:"Georgia", abbr:"GA", year:1788, flag:"IMG_4132.png"},
   {name:"Connecticut", abbr:"CT", year:1788, flag:"TRANSTULIT.png"},
@@ -289,7 +297,7 @@ const STATES_BASE = [
   {name:"Florida", abbr:"FL", year:1845, flag:"IMG_4131.png"},
   {name:"Texas", abbr:"TX", year:1845, flag:"IMG_4165.png"},
   {name:"Iowa", abbr:"IA", year:1846, flag:"RIGHTS,.png"},
-  {name:"Wisconsin", abbr:"WI", year:1848, flag:"WISCONSON.png"},
+  {name:"Wisconsin", abbr:"WI", year:1848, flag:"WISCONSIN.png"},
   {name:"California", abbr:"CA", year:1850, flag:"california.jpg"},
   {name:"Minnesota", abbr:"MN", year:1858, flag:"IMG_4145.png"},
   {name:"Oregon", abbr:"OR", year:1859, flag:"STATE OF OREGON.png"},
@@ -528,39 +536,54 @@ async function playTimeline(){
       renderDetails(s);
       highlightFocus();
       await new Promise(r=>setTimeout(r, 160));
-    }
-  }
-  playBtn.textContent = "▶ Join-the-Union";
-  playing = false;
-}
-playBtn.onclick = ()=>{ if(playing){ playing=false; playBtn.textContent="▶ Join-the-Union"; } else playTimeline(); };
+  // 535-580 Replace
+playBtn.onclick = ()=>{ 
+  if(playing){ 
+    playing=false; 
+    playBtn.textContent="▶ Join-the-Union"; 
+  } else playTimeline(); 
+};
 
 search.addEventListener('input', renderTiles);
 sortSel.addEventListener('change', ()=>{ renderTiles(); });
 
-/* Add custom state (no code edits) — saved to localStorage */
-function addCustomState(){
+/* Add custom state — saved to Firebase */
+async function addCustomState(){
   const name = document.getElementById('a-name').value.trim();
   const abbr = document.getElementById('a-abbr').value.trim().toUpperCase();
   const year = parseInt(document.getElementById('a-year').value,10);
   const flag = document.getElementById('a-flag').value.trim();
   const history = document.getElementById('a-history').value.trim();
 
-  if(!name || !/^[A-Z]{2}$/.test(abbr) || !year){ alert("Please enter name, 2-letter abbreviation, and year."); return; }
+  if(!name || !/^[A-Z]{2}$/.test(abbr) || !year){
+    alert("Please enter name, 2-letter abbreviation, and year."); 
+    return; 
+  }
 
-  const custom = loadCustom();
-  const idx = custom.findIndex(s=>s.abbr===abbr);
-  const entry = {name, abbr, year, flag, history};
-  if(idx>=0) custom[idx] = entry; else custom.push(entry);
-  saveCustom(custom);
+  // Save to Firebase Firestore
+  try{
+    await setDoc(doc(db, "states", abbr), {
+      name, abbr, year, flag, history
+    });
+  } catch(e){
+    console.error("Firebase save failed:", e);
+    alert("Failed to save state to Firebase. Check console.");
+    return;
+  }
 
-  if(history){ BIOS[abbr]=history; saveBios(BIOS); }
+  // Update local cache
+  if(history){ BIOS[abbr] = history; saveBios(BIOS); }
 
   refreshStates();
   renderTiles();
-  if(stateByAbbr(abbr)){ focusAbbr = abbr; renderDetails(stateByAbbr(abbr)); highlightFocus(); }
+  if(stateByAbbr(abbr)){ 
+    focusAbbr = abbr; 
+    renderDetails(stateByAbbr(abbr)); 
+    highlightFocus(); 
+  }
   addModal.close();
-  // clear form
+
+  // Clear form
   document.getElementById('a-name').value="";
   document.getElementById('a-abbr').value="";
   document.getElementById('a-year').value="";
