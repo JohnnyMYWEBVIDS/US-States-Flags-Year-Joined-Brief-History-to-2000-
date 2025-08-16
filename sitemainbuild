@@ -344,12 +344,20 @@ const mAbbr = document.getElementById('m-abbr');
 const mFlag = document.getElementById('m-flag');
 const mFlagUrl = document.getElementById('m-flag-url');
 const mHistory = document.getElementById('m-history');
-document.getElementById('closeModal') modal.close();
-document.getElementById('openModal') { const s = stateByAbbr(focusAbbr); if(s){ openStateModal(s); } };
-document.getElementById('saveHistory') = saveModalEdits;
-document.getElementById('resetLocal'). = resetLocalEdits;
-document.getElementById('loadWiki') loadWikiFor(stateByAbbr(focusAbbr), true);
+document.getElementById('closeModal').onclick = () => modal.close();
 
+document.getElementById('openModal').onclick = () => {
+  const s = stateByAbbr(focusAbbr);
+  if (s) openStateModal(s);
+};
+
+document.getElementById('saveHistory').onclick = saveModalEdits;
+
+document.getElementById('resetLocal').onclick = resetLocalEdits;
+
+document.getElementById('loadWiki').onclick = () => loadWikiFor(stateByAbbr(focusAbbr), true);
+
+document.getElementById('closeAdd').onclick = () => addModal.close();
 const addModal = document.getElementById('addModal');
 document.getElementById('closeAdd') addModal.close();
 addStateBtn.onclick = () => {
