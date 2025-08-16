@@ -344,14 +344,14 @@ const mAbbr = document.getElementById('m-abbr');
 const mFlag = document.getElementById('m-flag');
 const mFlagUrl = document.getElementById('m-flag-url');
 const mHistory = document.getElementById('m-history');
-document.getElementById('closeModal').onclick = ()=> modal.close();
-document.getElementById('openModal').onclick = ()=> { const s = stateByAbbr(focusAbbr); if(s){ openStateModal(s); } };
+document.getElementById('closeModal') modal.close();
+document.getElementById('openModal') { const s = stateByAbbr(focusAbbr); if(s){ openStateModal(s); } };
 document.getElementById('saveHistory').onclick = saveModalEdits;
 document.getElementById('resetLocal').onclick = resetLocalEdits;
-document.getElementById('loadWiki').onclick = ()=> loadWikiFor(stateByAbbr(focusAbbr), true);
+document.getElementById('loadWiki') loadWikiFor(stateByAbbr(focusAbbr), true);
 
 const addModal = document.getElementById('addModal');
-document.getElementById('closeAdd').onclick = ()=> addModal.close();
+document.getElementById('closeAdd') addModal.close();
 addStateBtn.onclick = () => {
   const pwd = prompt("Enter password to add a state:");
   if (pwd === "1119109P@)))") {
