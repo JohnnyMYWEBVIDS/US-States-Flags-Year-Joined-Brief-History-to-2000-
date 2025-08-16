@@ -346,8 +346,8 @@ const mFlagUrl = document.getElementById('m-flag-url');
 const mHistory = document.getElementById('m-history');
 document.getElementById('closeModal') modal.close();
 document.getElementById('openModal') { const s = stateByAbbr(focusAbbr); if(s){ openStateModal(s); } };
-document.getElementById('saveHistory').onclick = saveModalEdits;
-document.getElementById('resetLocal').onclick = resetLocalEdits;
+document.getElementById('saveHistory') = saveModalEdits;
+document.getElementById('resetLocal'). = resetLocalEdits;
 document.getElementById('loadWiki') loadWikiFor(stateByAbbr(focusAbbr), true);
 
 const addModal = document.getElementById('addModal');
