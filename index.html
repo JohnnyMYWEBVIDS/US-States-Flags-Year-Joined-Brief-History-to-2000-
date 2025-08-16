@@ -1,0 +1,581 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>US States • Flags, Year Joined, Brief History (to 2000)</title>
+<style>
+  :root{
+    --bg:#0f172a; --card:#0b1120; --muted:#94a3b8; --text:#e5e7eb;
+    --brand:#60a5fa; --accent:#22d3ee; --ok:#34d399; --warn:#f59e0b;
+    --tile:#111827; --tile-border:#1f2937; --focus:#fef08a;
+  }
+  *{box-sizing:border-box}
+  html,body{margin:0;height:100%}
+  body{
+    font-family: system-ui, -apple-system, Segoe UI, Roboto, Inter, Helvetica, Arial, "Apple Color Emoji","Segoe UI Emoji";
+    background: radial-gradient(1200px 800px at 70% -10%, #1f2937 0%, var(--bg) 45%, #0b1024 100%);
+    color: var(--text);
+  }
+  header{
+    padding:20px 16px 8px; display:flex; flex-wrap:wrap; align-items:center; gap:12px; justify-content:space-between;
+  }
+  .title{display:flex;align-items:center;gap:12px;font-weight:800;font-size:clamp(18px,4vw,26px)}
+  .title .dot{width:10px;height:10px;border-radius:999px;background:linear-gradient(45deg,var(--brand),var(--accent));box-shadow:0 0 12px var(--brand)}
+  .sub{font-size:12px;color:var(--muted)}
+  .controls{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+  .chip{
+    position:relative;
+    background:linear-gradient(180deg,#0b1226,#0a0f1f);
+    border:1px solid #1f2a44;border-radius:12px;
+    padding:8px 10px;display:flex;gap:8px;align-items:center;
+    box-shadow: inset 0 1px 0 rgba(255,255,255,0.05), 0 6px 18px rgba(0,0,0,0.2);
+  }
+  input[type="search"], select{
+    background:transparent;color:var(--text);border:none;outline:none;min-width:180px;
+  }
+  .btn{
+    border:none;cursor:pointer;color:#0b1020;background:linear-gradient(180deg,#b9ddff,#7ec2ff);
+    padding:10px 12px;border-radius:12px;font-weight:800;
+    box-shadow:0 10px 22px rgba(96,165,250,0.3), inset 0 1px 0 #fff9;
+  }
+  .btn:active{transform:translateY(1px)}
+  .btn.ghost{background:transparent;color:var(--text);border:1px dashed #2a3860;box-shadow:none}
+  .btn.green{background:linear-gradient(180deg,#b7f5dc,#6ee7b7)}
+  .tooltip-wrap{position:relative;display:inline-flex;align-items:center;gap:6px}
+  .tooltip{position:absolute;bottom:calc(100% + 8px);left:50%;transform:translateX(-50%);background:#0b1226;border:1px solid #1f2a44;border-radius:8px;padding:6px 8px;font-size:12px;color:var(--text);opacity:0;pointer-events:none;transition:opacity .15s}
+  .tooltip-wrap:hover .tooltip{opacity:1}
+
+  main{display:grid;grid-template-columns: 1.05fr 0.95fr; gap:16px; padding:12px 16px 28px}
+  @media (max-width: 960px){ main{grid-template-columns:1fr} }
+
+  .card{
+    background:linear-gradient(180deg,#0f152b,#0b1120);
+    border:1px solid #1d2441;border-radius:18px;padding:14px;
+    box-shadow:0 20px 50px rgba(0,0,0,0.4), inset 0 1px 0 rgba(255,255,255,0.04);
+  }
+  .card h2{margin:4px 0 12px;font-size:18px}
+  .row{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
+  .muted{color:var(--muted)}
+  .sep{height:1px;background:#1f2a44;margin:10px 0}
+
+  /* Tile Map (same vibe you liked) */
+  .grid{
+    --cols: 12;
+    display:grid;
+    grid-template-columns: repeat(var(--cols), minmax(42px,1fr));
+    gap:6px; user-select:none;
+  }
+  .tile{
+    position:relative; aspect-ratio: 6/5;
+    background: radial-gradient(60% 60% at 30% 25%, #2a385b 0%, var(--tile) 60%);
+    border:1px solid var(--tile-border);
+    border-radius:10px; display:flex;align-items:center;justify-content:center;
+    font-weight:800; letter-spacing:0.3px; cursor:pointer; transition: transform .15s ease, box-shadow .15s ease;
+    box-shadow: 0 6px 14px rgba(0,0,0,0.35);
+  }
+  .tile:hover{transform:translateY(-2px); box-shadow:0 12px 28px rgba(0,0,0,0.45)}
+  .tile .abbr{font-size:13px; line-height:1; padding:2px 4px; background: rgba(0,0,0,0.25); border-radius:6px}
+  .tile .year{
+    position:absolute; bottom:6px; right:8px; font-size:10px; color:#c7d2fe; line-height:1;
+    padding:2px 4px; background: rgba(12,16,36,0.55); border:1px solid rgba(50,70,120,0.6); border-radius:6px;
+  }
+  .tile.joined{outline:2px solid var(--ok); box-shadow:0 0 0 4px rgba(52,211,153,0.15)}
+  .tile.focus{outline:2px dashed var(--focus)}
+  .legend{display:flex;gap:10px;align-items:center;font-size:12px}
+  .dot{width:10px;height:10px;border-radius:20px}
+  .d-ok{background:var(--ok)}
+  .d-brand{background:var(--brand)}
+
+  /* Details panel */
+  .details{display:grid;grid-template-columns: 92px 1fr;gap:14px}
+  .flag{
+    width:92px; height:60px; border-radius:8px; background:#0b1226;
+    border:1px solid #1f2a44; object-fit:cover; object-position:center;
+  }
+  .placeholder-flag{display:grid;place-items:center;font-size:10px;color:var(--muted)}
+  .state-line{display:flex;gap:10px;align-items:baseline;flex-wrap:wrap}
+  .state-line h3{margin:0;font-size:22px}
+  .pill{padding:4px 8px;border-radius:999px;background:#0b1226;border:1px solid #1f2a44;color:#c7d2fe;font-size:12px}
+  .history{line-height:1.5;color:#dbe2f1;font-size:14px;white-space:pre-wrap;min-height:3lh}
+  .tools{display:flex;gap:8px;flex-wrap:wrap}
+  .kbd{font-family:ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", monospace; background:#0b1226;border:1px solid #1f2a44;border-radius:8px;padding:2px 6px;color:#c7d2fe}
+  .notice{font-size:12px;color:var(--muted);margin-top:6px}
+
+  /* Modal */
+  dialog{
+    border:none;border-radius:16px; padding:0; background:#0b1120; color:var(--text);
+    width:min(820px, 92vw); box-shadow:0 40px 120px rgba(0,0,0,0.6);
+  }
+  .dlg-head{display:flex;justify-content:space-between;align-items:center;padding:14px 16px;border-bottom:1px solid #1d2441}
+  .dlg-body{padding:16px}
+  .dlg-close{all:unset;cursor:pointer;padding:6px 10px;border-radius:8px;background:#111a36}
+  .dlg-grid{display:grid;grid-template-columns:160px 1fr; gap:14px}
+  .dlg-flag{width:160px;height:100px;border-radius:10px;border:1px solid #1f2a44;background:#0b1226;object-fit:cover}
+  .dlg-meta{display:flex;gap:8px;flex-wrap:wrap}
+  .dlg-meta .pill{background:#0b1226}
+  textarea{
+    width:100%;min-height:180px;border-radius:12px;background:#0b1226;border:1px solid #1f2a44;color:var(--text);padding:10px;resize:vertical
+  }
+
+  footer{padding:18px;color:var(--muted);text-align:center;font-size:12px}
+  .fade-in{animation:fade .6s ease both}
+  @keyframes fade{from{opacity:0; transform:translateY(4px)}}
+</style>
+</head>
+<body>
+  <header>
+    <div>
+      <div class="title"><span class="dot"></span> US States — Flags • Year Joined • Brief History</div>
+      <div class="sub">Click a tile. Play the “Join the Union” animation. Pull bios from Wikipedia or edit your own (saved locally).</div>
+    </div>
+    <div class="controls">
+      <div class="chip">
+        🔎<input id="search" type="search" placeholder="Search state…" />
+        <div class="tooltip-wrap">
+          ⓘ
+          <div class="tooltip">Tip: start typing to filter tiles</div>
+        </div>
+      </div>
+      <div class="chip">Sort:
+        <select id="sort">
+          <option value="year">By year joined</option>
+          <option value="name">Alphabetical</option>
+        </select>
+      </div>
+      <button class="btn" id="play">▶ Join-the-Union</button>
+      <button class="btn green" id="addState">＋ Add State</button>
+    </div>
+  </header>
+
+  <main>
+    <section class="card fade-in">
+      <div class="row" style="justify-content:space-between;align-items:center;margin-bottom:10px">
+        <h2>Interactive US Map (Tile Grid)</h2>
+        <div class="legend">
+          <span class="dot d-ok"></span> Joined highlight
+          <span class="dot d-brand" style="margin-left:12px"></span> Focus
+        </div>
+      </div>
+      <div id="grid" class="grid" aria-label="US tile map"></div>
+    </section>
+
+    <aside class="card fade-in">
+      <h2>Details</h2>
+      <div class="details" id="details">
+        <div class="flag placeholder-flag">flag<br/>preview</div>
+        <div>
+          <div class="state-line">
+            <h3 id="d-name">Select a state</h3>
+            <span class="pill">Year: <span id="d-year">—</span></span>
+          </div>
+          <div class="tools" style="margin:6px 0 10px">
+            <button class="btn ghost" id="openModal">Open details</button>
+            <span class="kbd">Tip: type to search</span>
+          </div>
+          <div id="d-history" class="history">Click a tile to see the brief history (through 2000). You can edit the text in the modal and save locally.</div>
+          <div class="notice">Set a <code>flag</code> URL/path for a real flag image preview. Wikipedia summaries load automatically (can be edited).</div>
+        </div>
+      </div>
+    </aside>
+  </main>
+
+  <!-- Details modal -->
+  <dialog id="modal">
+    <div class="dlg-head">
+      <div class="row">
+        <strong id="m-name">State</strong>
+        <span class="pill">Year <span id="m-year">—</span></span>
+      </div>
+      <button class="dlg-close" id="closeModal">✕</button>
+    </div>
+    <div class="dlg-body">
+      <div class="dlg-grid">
+        <img id="m-flag" class="dlg-flag" alt="State flag preview" />
+        <div>
+          <div class="dlg-meta">
+            <span class="pill" id="m-abbr"></span>
+            <span class="pill">Joined: <span id="m-joined"></span></span>
+          </div>
+          <div class="sep"></div>
+          <label for="m-flag-url" class="muted">Flag URL (optional)</label>
+          <input id="m-flag-url" placeholder="https://example.com/flag.png" style="width:100%;padding:8px;border-radius:8px;background:#0b1226;border:1px solid #1f2a44;color:var(--text);margin:6px 0 10px">
+          <label for="m-history">Brief history (to year 2000)</label>
+          <textarea id="m-history"></textarea>
+        </div>
+      </div>
+      <div class="row" style="justify-content:space-between;margin-top:12px">
+        <button class="btn ghost" id="loadWiki">↻ Refresh from Wikipedia</button>
+        <div class="row">
+          <button class="btn ghost" id="resetLocal">Reset local edits</button>
+          <button class="btn" id="saveHistory">Save</button>
+        </div>
+      </div>
+    </div>
+  </dialog>
+
+  <!-- Add State modal -->
+  <dialog id="addModal">
+    <div class="dlg-head">
+      <strong>Add a State</strong>
+      <button class="dlg-close" id="closeAdd">✕</button>
+    </div>
+    <div class="dlg-body">
+      <div class="dlg-grid">
+        <div style="display:grid;gap:8px">
+          <label class="muted">Name</label>
+          <input id="a-name" placeholder="e.g., New Columbia" style="padding:8px;border-radius:8px;background:#0b1226;border:1px solid #1f2a44;color:var(--text)">
+          <label class="muted">Abbreviation (2 letters)</label>
+          <input id="a-abbr" placeholder="NC" maxlength="2" style="padding:8px;border-radius:8px;background:#0b1226;border:1px solid #1f2a44;color:var(--text)">
+          <label class="muted">Year joined</label>
+          <input id="a-year" type="number" placeholder="1900" style="padding:8px;border-radius:8px;background:#0b1226;border:1px solid #1f2a44;color:var(--text)">
+          <label class="muted">Flag URL (optional)</label>
+          <input id="a-flag" placeholder="https://…" style="padding:8px;border-radius:8px;background:#0b1226;border:1px solid #1f2a44;color:var(--text)">
+        </div>
+        <div>
+          <label class="muted">History (to year 2000)</label>
+          <textarea id="a-history" placeholder="Short summary…"></textarea>
+        </div>
+      </div>
+      <div class="row" style="justify-content:flex-end;margin-top:10px">
+        <button class="btn" id="a-save">Add</button>
+      </div>
+    </div>
+  </dialog>
+
+  <footer>© Johnny Patrick — GitHub Pages ready. Single-file app. Bios cached locally. No external libs.</footer>
+
+<script>
+/* =========================
+   Local persistence helpers
+   ========================= */
+const LS_KEY = "us_states_custom";
+const LS_BIO = "us_state_bios";
+function loadCustom(){ try{return JSON.parse(localStorage.getItem(LS_KEY))||[]}catch{return[]}}
+function saveCustom(arr){ localStorage.setItem(LS_KEY, JSON.stringify(arr||[])); }
+function loadBios(){ try{return JSON.parse(localStorage.getItem(LS_BIO))||{}}catch{return{}}}
+function saveBios(obj){ localStorage.setItem(LS_BIO, JSON.stringify(obj||{})); }
+
+/* =========================
+   Base data (50 states)
+   ========================= */
+const STATES_BASE = [
+  {name:"Delaware", abbr:"DE", year:1787, flag:""},
+  {name:"Pennsylvania", abbr:"PA", year:1787, flag:""},
+  {name:"New Jersey", abbr:"NJ", year:1787, flag:""},
+  {name:"Georgia", abbr:"GA", year:1788, flag:""},
+  {name:"Connecticut", abbr:"CT", year:1788, flag:""},
+  {name:"Massachusetts", abbr:"MA", year:1788, flag:""},
+  {name:"Maryland", abbr:"MD", year:1788, flag:""},
+  {name:"South Carolina", abbr:"SC", year:1788, flag:""},
+  {name:"New Hampshire", abbr:"NH", year:1788, flag:""},
+  {name:"Virginia", abbr:"VA", year:1788, flag:""},
+  {name:"New York", abbr:"NY", year:1788, flag:""},
+  {name:"North Carolina", abbr:"NC", year:1789, flag:""},
+  {name:"Rhode Island", abbr:"RI", year:1790, flag:""},
+  {name:"Vermont", abbr:"VT", year:1791, flag:""},
+  {name:"Kentucky", abbr:"KY", year:1792, flag:""},
+  {name:"Tennessee", abbr:"TN", year:1796, flag:""},
+  {name:"Ohio", abbr:"OH", year:1803, flag:""},
+  {name:"Louisiana", abbr:"LA", year:1812, flag:""},
+  {name:"Indiana", abbr:"IN", year:1816, flag:""},
+  {name:"Mississippi", abbr:"MS", year:1817, flag:""},
+  {name:"Illinois", abbr:"IL", year:1818, flag:""},
+  {name:"Alabama", abbr:"AL", year:1819, flag:""},
+  {name:"Maine", abbr:"ME", year:1820, flag:""},
+  {name:"Missouri", abbr:"MO", year:1821, flag:""},
+  {name:"Arkansas", abbr:"AR", year:1836, flag:""},
+  {name:"Michigan", abbr:"MI", year:1837, flag:""},
+  {name:"Florida", abbr:"FL", year:1845, flag:""},
+  {name:"Texas", abbr:"TX", year:1845, flag:""},
+  {name:"Iowa", abbr:"IA", year:1846, flag:""},
+  {name:"Wisconsin", abbr:"WI", year:1848, flag:""},
+  {name:"California", abbr:"CA", year:1850, flag:""},
+  {name:"Minnesota", abbr:"MN", year:1858, flag:""},
+  {name:"Oregon", abbr:"OR", year:1859, flag:""},
+  {name:"Kansas", abbr:"KS", year:1861, flag:""},
+  {name:"West Virginia", abbr:"WV", year:1863, flag:""},
+  {name:"Nevada", abbr:"NV", year:1864, flag:""},
+  {name:"Nebraska", abbr:"NE", year:1867, flag:""},
+  {name:"Colorado", abbr:"CO", year:1876, flag:""},
+  {name:"North Dakota", abbr:"ND", year:1889, flag:""},
+  {name:"South Dakota", abbr:"SD", year:1889, flag:""},
+  {name:"Montana", abbr:"MT", year:1889, flag:""},
+  {name:"Washington", abbr:"WA", year:1889, flag:""},
+  {name:"Idaho", abbr:"ID", year:1890, flag:""},
+  {name:"Wyoming", abbr:"WY", year:1890, flag:""},
+  {name:"Utah", abbr:"UT", year:1896, flag:""},
+  {name:"Oklahoma", abbr:"OK", year:1907, flag:""},
+  {name:"New Mexico", abbr:"NM", year:1912, flag:""},
+  {name:"Arizona", abbr:"AZ", year:1912, flag:""},
+  {name:"Alaska", abbr:"AK", year:1959, flag:""},
+  {name:"Hawaii", abbr:"HI", year:1959, flag:""},
+];
+
+/* Tile layout matching the earlier style */
+const TILE_LAYOUT = [
+  ["AK","","","","","","","","","","","HI"],
+  ["WA","ID","MT","ND","","","","","","","", ""],
+  ["OR","NV","WY","SD","","","","","","","", ""],
+  ["CA","UT","CO","NE","MN","WI","MI","","","VT","NH","ME"],
+  ["","AZ","NM","KS","IA","IL","IN","OH","PA","NY","MA","RI"],
+  ["","", "OK","MO","AR","KY","WV","VA","MD","DE","NJ","CT"],
+  ["","", "TX","LA","MS","TN","AL","GA","SC","NC","",""],
+  ["","","","","","", "FL","","","","",""]
+];
+
+/* Runtime state */
+const grid = document.getElementById('grid');
+const search = document.getElementById('search');
+const sortSel = document.getElementById('sort');
+const playBtn = document.getElementById('play');
+const addStateBtn = document.getElementById('addState');
+
+const details = document.getElementById('details');
+const detailName = document.getElementById('d-name');
+const detailYear = document.getElementById('d-year');
+const detailHist = document.getElementById('d-history');
+
+const modal = document.getElementById('modal');
+const mName = document.getElementById('m-name');
+const mYear = document.getElementById('m-year');
+const mJoined = document.getElementById('m-joined');
+const mAbbr = document.getElementById('m-abbr');
+const mFlag = document.getElementById('m-flag');
+const mFlagUrl = document.getElementById('m-flag-url');
+const mHistory = document.getElementById('m-history');
+document.getElementById('closeModal').onclick = ()=> modal.close();
+document.getElementById('openModal').onclick = ()=> { const s = stateByAbbr(focusAbbr); if(s){ openStateModal(s); } };
+document.getElementById('saveHistory').onclick = saveModalEdits;
+document.getElementById('resetLocal').onclick = resetLocalEdits;
+document.getElementById('loadWiki').onclick = ()=> loadWikiFor(stateByAbbr(focusAbbr), true);
+
+const addModal = document.getElementById('addModal');
+document.getElementById('closeAdd').onclick = ()=> addModal.close();
+addStateBtn.onclick = ()=> addModal.showModal();
+document.getElementById('a-save').onclick = addCustomState;
+
+let playing = false;
+let focusAbbr = "CA";
+let STATES = [];       // merged base + custom
+let BIOS = loadBios(); // { "CA": "custom bio ..." }
+
+/* Merge base and custom states */
+function refreshStates(){
+  const custom = loadCustom(); // array of {name,abbr,year,flag,history}
+  const byAbbr = new Map();
+  STATES_BASE.forEach(s=>byAbbr.set(s.abbr, {...s}));
+  custom.forEach(s=>byAbbr.set(s.abbr, {...s})); // override/add
+  STATES = [...byAbbr.values()];
+}
+
+/* Helpers */
+function stateByAbbr(ab){ return STATES.find(s=>s.abbr===ab); }
+function stateByName(n){ return STATES.find(s=>s.name.toUpperCase()===n.toUpperCase()); }
+
+/* Build tiles */
+function renderTiles(){
+  grid.innerHTML = "";
+  const q = (search.value || "").trim().toLowerCase();
+  const map = new Map(STATES.map(s=>[s.abbr, s]));
+
+  TILE_LAYOUT.forEach(row=>{
+    row.forEach(cell=>{
+      if(!cell){ const spacer = document.createElement("div"); spacer.style.height="0"; grid.appendChild(spacer); return; }
+      const s = map.get(cell);
+      if(!s){ const hole = document.createElement("div"); hole.className="tile"; hole.style.visibility="hidden"; grid.appendChild(hole); return; }
+      const match = !q || s.name.toLowerCase().includes(q) || s.abbr.toLowerCase().includes(q);
+      const tile = document.createElement("div");
+      tile.className = "tile";
+      if(s.abbr===focusAbbr) tile.classList.add("focus");
+      tile.dataset.abbr = s.abbr;
+      tile.title = `${s.name} — Joined ${s.year}`;
+      tile.style.visibility = match ? "visible" : "hidden";
+      tile.innerHTML = `<div class="abbr">${s.abbr}</div><div class="year">${s.year}</div>`;
+      tile.onclick = ()=> { focusAbbr = s.abbr; renderDetails(s); highlightFocus(); };
+      grid.appendChild(tile);
+    });
+  });
+
+  // subtle entrance
+  [...grid.children].forEach((el,i)=>{
+    if(el.classList.contains("tile") && el.style.visibility!=="hidden"){
+      el.animate([{opacity:0, transform:"translateY(6px)"},{opacity:1, transform:"translateY(0)"}],
+                 {duration:220, delay: i*10, easing:"cubic-bezier(.2,.8,.2,1)"});
+    }
+  });
+}
+function highlightFocus(){
+  [...grid.querySelectorAll('.tile')].forEach(t=>t.classList.toggle('focus', t.dataset.abbr===focusAbbr));
+}
+
+/* Details panel + modal */
+function renderDetails(s){
+  detailName.textContent = s.name;
+  detailYear.textContent = s.year;
+
+  // flag in side panel
+  let flagEl = details.querySelector('img.flag');
+  if(!flagEl){
+    const img = document.createElement('img');
+    img.className = "flag";
+    details.querySelector('.flag')?.replaceWith(img);
+    flagEl = img;
+  }
+  const imgSrc = s.flag || "";
+  if(imgSrc){
+    flagEl.src = imgSrc; flagEl.alt = `${s.name} flag`;
+    flagEl.style.background=""; // clear placeholder pattern
+  }else{
+    flagEl.removeAttribute('src');
+    flagEl.alt = "No flag set";
+    flagEl.style.background = "repeating-linear-gradient(45deg,#0b1226,#0b1226 8px,#0d1630 8px,#0d1630 16px)";
+  }
+
+  // history text: prefer local saved, else fetched wiki (cached), else placeholder
+  const bio = BIOS[s.abbr];
+  if(bio){ detailHist.textContent = bio; }
+  else { detailHist.textContent = "Loading summary from Wikipedia…"; loadWikiFor(s); }
+}
+
+function openStateModal(s){
+  mName.textContent = s.name;
+  mYear.textContent = s.year;
+  mJoined.textContent = s.year;
+  mAbbr.textContent = s.abbr;
+  mFlag.src = s.flag || "";
+  mFlagUrl.value = s.flag || "";
+  mHistory.value = BIOS[s.abbr] || "";
+  modal.showModal();
+}
+
+async function saveModalEdits(){
+  const ab = mAbbr.textContent;
+  const s = stateByAbbr(ab);
+  if(!s) return;
+  // save flag URL into custom states store (so it persists)
+  const custom = loadCustom();
+  const idx = custom.findIndex(x=>x.abbr===ab);
+  const updated = {...s, flag: (mFlagUrl.value||"")};
+  if(idx>=0){ custom[idx] = {...custom[idx], flag: updated.flag}; }
+  else { custom.push(updated); }
+  saveCustom(custom);
+  refreshStates();
+
+  // save bio locally
+  BIOS[ab] = mHistory.value.trim();
+  saveBios(BIOS);
+
+  // update UI
+  renderDetails(stateByAbbr(ab));
+  renderTiles();
+  modal.close();
+}
+
+function resetLocalEdits(){
+  const ab = mAbbr.textContent;
+  delete BIOS[ab];
+  saveBios(BIOS);
+  mHistory.value = "";
+  loadWikiFor(stateByAbbr(ab), true);
+}
+
+/* Wikipedia summary */
+async function fetchWikiSummary(stateName){
+  try{
+    const url = `https://en.wikipedia.org/api/rest_v1/page/summary/${encodeURIComponent(stateName)}`;
+    const res = await fetch(url, {headers:{'Accept':'application/json'}});
+    if(!res.ok) throw new Error("wiki fetch failed");
+    const data = await res.json();
+    // Use extract; trim to focus to <= 2000 for brevity
+    return (data.extract||"No summary available.").slice(0,2000);
+  }catch(e){
+    return "Wikipedia summary unavailable (network/CORS). Add your own bio and click Save.";
+  }
+}
+async function loadWikiFor(s, force=false){
+  if(!s) return;
+  if(BIOS[s.abbr] && !force){ detailHist.textContent = BIOS[s.abbr]; return; }
+  const text = await fetchWikiSummary(s.name);
+  // cache but do not override user custom unless force refresh asked
+  if(force || !BIOS[s.abbr]){ BIOS[s.abbr] = text; saveBios(BIOS); }
+  if(s.abbr===focusAbbr){ detailHist.textContent = BIOS[s.abbr] || text; }
+  // also reflect in modal if open on same state
+  if(mAbbr.textContent===s.abbr){ mHistory.value = BIOS[s.abbr] || ""; }
+}
+
+/* Timeline animation */
+async function playTimeline(){
+  if(playing) return;
+  playing = true;
+  playBtn.textContent = "⏹ Stop";
+  const order = [...STATES].sort((a,b)=>a.year-b.year || a.name.localeCompare(b.name));
+  const tiles = new Map([...grid.querySelectorAll('.tile')].map(t=>[t.dataset.abbr,t]));
+
+  tiles.forEach(t=>t.classList.remove('joined'));
+
+  for(const s of order){
+    if(!playing) break;
+    const tile = tiles.get(s.abbr);
+    if(tile){
+      tile.classList.add('joined');
+      tile.animate([
+        {boxShadow:"0 0 0 0 rgba(52,211,153,0)", transform:"translateY(0)"},
+        {boxShadow:"0 0 0 12px rgba(52,211,153,0.18)", transform:"translateY(-2px)"},
+        {boxShadow:"0 0 0 0 rgba(52,211,153,0)", transform:"translateY(0)"}
+      ], {duration:650, easing:"ease-out"});
+      focusAbbr = s.abbr;
+      renderDetails(s);
+      highlightFocus();
+      await new Promise(r=>setTimeout(r, 160));
+    }
+  }
+  playBtn.textContent = "▶ Join-the-Union";
+  playing = false;
+}
+playBtn.onclick = ()=>{ if(playing){ playing=false; playBtn.textContent="▶ Join-the-Union"; } else playTimeline(); };
+
+search.addEventListener('input', renderTiles);
+sortSel.addEventListener('change', ()=>{ renderTiles(); });
+
+/* Add custom state (no code edits) — saved to localStorage */
+function addCustomState(){
+  const name = document.getElementById('a-name').value.trim();
+  const abbr = document.getElementById('a-abbr').value.trim().toUpperCase();
+  const year = parseInt(document.getElementById('a-year').value,10);
+  const flag = document.getElementById('a-flag').value.trim();
+  const history = document.getElementById('a-history').value.trim();
+
+  if(!name || !/^[A-Z]{2}$/.test(abbr) || !year){ alert("Please enter name, 2-letter abbreviation, and year."); return; }
+
+  const custom = loadCustom();
+  const idx = custom.findIndex(s=>s.abbr===abbr);
+  const entry = {name, abbr, year, flag, history};
+  if(idx>=0) custom[idx] = entry; else custom.push(entry);
+  saveCustom(custom);
+
+  if(history){ BIOS[abbr]=history; saveBios(BIOS); }
+
+  refreshStates();
+  renderTiles();
+  if(stateByAbbr(abbr)){ focusAbbr = abbr; renderDetails(stateByAbbr(abbr)); highlightFocus(); }
+  addModal.close();
+  // clear form
+  document.getElementById('a-name').value="";
+  document.getElementById('a-abbr').value="";
+  document.getElementById('a-year').value="";
+  document.getElementById('a-flag').value="";
+  document.getElementById('a-history').value="";
+}
+
+/* Boot */
+window.addEventListener('DOMContentLoaded', ()=>{
+  refreshStates();
+  renderTiles();
+  const start = stateByAbbr(focusAbbr) || STATES[0];
+  renderDetails(start);
+});
+</script>
+</body>
+</html>
+
