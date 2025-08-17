@@ -1,0 +1,298 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>USA States & Territories - Vintage Apple</title>
+<style>
+/* Body */
+body {
+  font-family: "Lucida Grande","Helvetica",sans-serif;
+  background: #b0d0e5; /* soft light blue */
+  margin: 0;
+  padding: 0;
+}
+
+/* Header */
+header {
+  background: linear-gradient(#e5f5ff,#80b0d8);
+  text-align: center;
+  padding: 30px 0;
+  font-size: 36px;
+  font-weight: bold;
+  box-shadow: 0 5px 15px rgba(0,0,0,0.4);
+  border-bottom: 2px solid #777;
+}
+
+/* Controls bar */
+.controls {
+  display: flex;
+  justify-content: center;
+  gap: 15px;
+  padding: 15px;
+  background: linear-gradient(#d9ecf8,#85b8d3);
+  border-bottom: 2px solid #777;
+}
+
+.controls input, .controls select, .history-btn {
+  padding: 8px 12px;
+  border-radius: 12px;
+  border: 1px solid #666;
+  font-size: 14px;
+  box-shadow: inset 0 3px 6px rgba(255,255,255,0.8),
+              inset 0 -2px 4px rgba(0,0,0,0.15);
+}
+
+.history-btn {
+  cursor: pointer;
+  background: linear-gradient(#f0fbff,#c0e0f0);
+  box-shadow: 0 5px 12px rgba(0,0,0,0.35);
+}
+
+.history-btn:hover {
+  background: linear-gradient(#ffffff,#d0e8f5);
+}
+
+/* Grids */
+.grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill,minmax(140px,1fr));
+  gap: 25px;
+  padding: 25px;
+}
+
+/* Exaggerated skeuomorphic card */
+.state-card {
+  background: linear-gradient(#d7eefb,#88c2e0);
+  border-radius: 20px;
+  text-align: center;
+  padding: 20px;
+  cursor: pointer;
+  box-shadow: 0 10px 25px rgba(0,0,0,0.45),
+              inset 0 5px 10px rgba(255,255,255,0.6);
+  border: 2px solid #555;
+  transition: transform 0.25s, box-shadow 0.25s;
+  position: relative;
+}
+.state-card:hover {
+  transform: translateY(-7px) scale(1.08);
+  box-shadow: 0 15px 30px rgba(0,0,0,0.55),
+              inset 0 5px 12px rgba(255,255,255,0.7);
+}
+.state-card img {
+  width: 100px;
+  height: 60px;
+  object-fit: contain;
+  border-radius: 10px;
+  margin-bottom: 8px;
+  border: 2px solid #aaa;
+  background: #fff;
+}
+.state-card div {
+  font-size: 14px;
+  font-weight: bold;
+  color: #111;
+}
+
+/* Popup panels */
+.panel {
+  position: fixed;
+  top: 10%;
+  left: 50%;
+  transform: translateX(-50%);
+  background: linear-gradient(#e0f5ff,#80b8d8);
+  padding: 40px;
+  width: 70%;
+  max-width: 750px;
+  border-radius: 20px;
+  box-shadow: 0 15px 35px rgba(0,0,0,0.55),
+              inset 0 5px 12px rgba(255,255,255,0.5);
+  display: none;
+  z-index: 1000;
+  border: 2px solid #666;
+}
+.panel h2 {
+  margin-top: 0;
+  font-size: 30px;
+  font-weight: bold;
+}
+.close-btn {
+  cursor: pointer;
+  float: right;
+  font-size: 18px;
+  padding: 5px 12px;
+  border-radius: 10px;
+  border: 1px solid #555;
+  background: linear-gradient(#f0fbff,#c0e0f0);
+  box-shadow: 0 3px 8px rgba(0,0,0,0.35);
+}
+.close-btn:hover {
+  background: linear-gradient(#ffffff,#d0e8f5);
+}
+</style>
+</head>
+<body>
+
+<header>USA States & Territories</header>
+
+<div class="controls">
+  <input type="text" id="searchInput" placeholder="Search states or territories...">
+  <select id="sortSelect">
+    <option value="alpha">Sort: Alphabetical</option>
+    <option value="year">Sort: By Year</option>
+  </select>
+  <button class="history-btn" onclick="showHistory()">U.S. History</button>
+</div>
+
+<h2 style="text-align:center; margin-top:20px;">States</h2>
+<div class="grid" id="statesGrid"></div>
+
+<h2 style="text-align:center; margin-top:40px;">Territories</h2>
+<div class="grid" id="territoriesGrid"></div>
+
+<div class="panel" id="stateInfo">
+  <span class="close-btn" onclick="closeInfo()">X</span>
+  <h2 id="stateTitle">Name</h2>
+  <p id="stateCapital">Capital: Loading...</p>
+  <p id="stateBio">Loading...</p>
+</div>
+
+<div class="panel" id="historySection">
+  <span class="close-btn" onclick="closeHistory()">X</span>
+  <h2>U.S. History Overview</h2>
+  <p>The United States of America was founded in 1776. The original 13 colonies ratified the Constitution starting in 1787. Over the 19th and 20th centuries, new states joined the union up to Alaska and Hawaii in 1959. Territories were acquired and organized at various points. This interactive guide allows you to explore each state's and territory's details and history.</p>
+</div>
+
+<script>
+document.addEventListener("DOMContentLoaded", () => {
+
+// STATES DATA
+const STATES_BASE = [
+  {name:"Delaware", abbr:"DE", year:1787, flag:"DECEMBER 7, 1787.png", capital:"Dover"},
+  {name:"Pennsylvania", abbr:"PA", year:1787, flag:"IMG_4160.png", capital:"Harrisburg"},
+  {name:"New Jersey", abbr:"NJ", year:1787, flag:"IMG_4152.png", capital:"Trenton"},
+  {name:"Georgia", abbr:"GA", year:1788, flag:"IMG_4132.png", capital:"Atlanta"},
+  {name:"Connecticut", abbr:"CT", year:1788, flag:"TRANSTULIT.png", capital:"Hartford"},
+  {name:"Massachusetts", abbr:"MA", year:1788, flag:"IMG_4143.png", capital:"Boston"},
+  {name:"Maryland", abbr:"MD", year:1788, flag:"IMG_4142.png", capital:"Annapolis"},
+  {name:"South Carolina", abbr:"SC", year:1788, flag:"IMG_4162.png", capital:"Columbia"},
+  {name:"New Hampshire", abbr:"NH", year:1788, flag:"IMG_4151.png", capital:"Concord"},
+  {name:"Virginia", abbr:"VA", year:1788, flag:"IMG_4168.png", capital:"Richmond"},
+  {name:"New York", abbr:"NY", year:1788, flag:"IMG_4154.png", capital:"Albany"},
+  {name:"North Carolina", abbr:"NC", year:1789, flag:"MAY 20th 1775.png", capital:"Raleigh"},
+  {name:"Rhode Island", abbr:"RI", year:1790, flag:"IMG_4161.png", capital:"Providence"},
+  {name:"Vermont", abbr:"VT", year:1791, flag:"IMG_4167.png", capital:"Montpelier"},
+  {name:"Kentucky", abbr:"KY", year:1792, flag:"SHITED WE STAND.png", capital:"Frankfort"},
+  {name:"Tennessee", abbr:"TN", year:1796, flag:"IMG_4164.png", capital:"Nashville"},
+  {name:"Ohio", abbr:"OH", year:1803, flag:"IMG_4157.png", capital:"Columbus"},
+  {name:"Louisiana", abbr:"LA", year:1812, flag:"IMG_4140.png", capital:"Baton Rouge"},
+  {name:"Indiana", abbr:"IN", year:1816, flag:"IMG_4136.png", capital:"Indianapolis"},
+  {name:"Mississippi", abbr:"MS", year:1817, flag:"IMG_4146.png", capital:"Jackson"},
+  {name:"Illinois", abbr:"IL", year:1818, flag:"ILLINOIS.png", capital:"Springfield"},
+  {name:"Alabama", abbr:"AL", year:1819, flag:"IMG_4123.png", capital:"Montgomery"},
+  {name:"Maine", abbr:"ME", year:1820, flag:"IMG_4141.png", capital:"Augusta"},
+  {name:"Missouri", abbr:"MO", year:1821, flag:"IMG_4147.png", capital:"Jefferson City"},
+  {name:"Arkansas", abbr:"AR", year:1836, flag:"arkansas.jpg", capital:"Little Rock"},
+  {name:"Michigan", abbr:"MI", year:1837, flag:"TUEBOR.png", capital:"Lansing"},
+  {name:"Florida", abbr:"FL", year:1845, flag:"IMG_4131.png", capital:"Tallahassee"},
+  {name:"Texas", abbr:"TX", year:1845, flag:"IMG_4165.png", capital:"Austin"},
+  {name:"Iowa", abbr:"IA", year:1846, flag:"RIGHTS,.png", capital:"Des Moines"},
+  {name:"Wisconsin", abbr:"WI", year:1848, flag:"WISCONSIN.png", capital:"Madison"},
+  {name:"California", abbr:"CA", year:1850, flag:"california.jpg", capital:"Sacramento"},
+  {name:"Minnesota", abbr:"MN", year:1858, flag:"IMG_4145.png", capital:"St. Paul"},
+  {name:"Oregon", abbr:"OR", year:1859, flag:"STATE OF OREGON.png", capital:"Salem"},
+  {name:"Kansas", abbr:"KS", year:1861, flag:"IMG_4138.png", capital:"Topeka"},
+  {name:"West Virginia", abbr:"WV", year:1863, flag:"IMG_4170.png", capital:"Charleston"},
+  {name:"Nevada", abbr:"NV", year:1864, flag:"IMG_4150.png", capital:"Carson City"},
+  {name:"Nebraska", abbr:"NE", year:1867, flag:"THE STATE.png", capital:"Lincoln"},
+  {name:"Colorado", abbr:"CO", year:1876, flag:"IMG_4128.png", capital:"Denver"},
+  {name:"North Dakota", abbr:"ND", year:1889, flag:"NORTH DAKOTA.png", capital:"Bismarck"},
+  {name:"South Dakota", abbr:"SD", year:1889, flag:"IMG_4163.png", capital:"Pierre"},
+  {name:"Montana", abbr:"MT", year:1889, flag:"MONTANA.png", capital:"Helena"},
+  {name:"Washington", abbr:"WA", year:1889, flag:"THE STATIEwa.png", capital:"Olympia"},
+  {name:"Idaho", abbr:"ID", year:1890, flag:"GREAT BEAT.png", capital:"Boise"},
+  {name:"Wyoming", abbr:"WY", year:1890, flag:"IMG_4172.png", capital:"Cheyenne"},
+  {name:"Utah", abbr:"UT", year:1896, flag:"IMG_4166.png", capital:"Salt Lake City"},
+  {name:"Oklahoma", abbr:"OK", year:1907, flag:"OKLAHOMA.png", capital:"Oklahoma City"},
+  {name:"New Mexico", abbr:"NM", year:1912, flag:"IMG_4153.png", capital:"Santa Fe"},
+  {name:"Arizona", abbr:"AZ", year:1912, flag:"IMG_4125.png", capital:"Phoenix"},
+  {name:"Alaska", abbr:"AK", year:1959, flag:"IMG_4124.png", capital:"Juneau"},
+  {name:"Hawaii", abbr:"HI", year:1959, flag:"IMG_4133.png", capital:"Honolulu"},
+];
+
+// TERRITORIES DATA
+const TERRITORIES_BASE = [
+  {name:"Puerto Rico", abbr:"PR", year:1898, flag:"puertorico.png", capital:"San Juan"},
+  {name:"Guam", abbr:"GU", year:1898, flag:"guam.png", capital:"Hagåtña"},
+  {name:"U.S. Virgin Islands", abbr:"VI", year:1917, flag:"usvi.png", capital:"Charlotte Amalie"},
+  {name:"American Samoa", abbr:"AS", year:1900, flag:"americansamoa.png", capital:"Pago Pago"},
+  {name:"Northern Mariana Islands", abbr:"MP", year:1947, flag:"nmi.png", capital:"Saipan"}
+];
+
+const grid = document.getElementById('statesGrid');
+const territoriesGrid = document.getElementById('territoriesGrid');
+const infoBox = document.getElementById('stateInfo');
+const historyBox = document.getElementById('historySection');
+const title = document.getElementById('stateTitle');
+const capitalEl = document.getElementById('stateCapital');
+const bio = document.getElementById('stateBio');
+
+let currentStates = [...STATES_BASE].sort((a,b)=>a.name.localeCompare(b.name));
+let currentTerritories = [...TERRITORIES_BASE].sort((a,b)=>a.name.localeCompare(b.name));
+
+function renderCards(items, container) {
+  container.innerHTML = '';
+  items.forEach(item=>{
+    const card = document.createElement('div');
+    card.className='state-card';
+    card.innerHTML = `<img src="${item.flag}" alt="${item.name} Flag" onerror="this.src='placeholder.png'"><div>${item.abbr}</div><div>${item.year}</div>`;
+    card.addEventListener('click',()=>{
+      title.textContent=item.name;
+      capitalEl.textContent="Capital: "+item.capital;
+      bio.textContent='Loading...';
+      infoBox.style.display='block';
+      fetch(`https://en.wikipedia.org/api/rest_v1/page/summary/${item.name}`)
+        .then(res=>res.json())
+        .then(data=>{
+          if(!data.extract || data.extract.length<50){
+            bio.innerHTML="No detailed info available. Capital: "+item.capital;
+          } else {
+            bio.innerHTML=data.extract_html||"No info available";
+          }
+        }).catch(()=>bio.textContent='Error loading data.');
+    });
+    container.appendChild(card);
+  });
+}
+
+renderCards(currentStates, grid);
+renderCards(currentTerritories, territoriesGrid);
+
+// Search input: filter both
+document.getElementById('searchInput').addEventListener('input',e=>{
+  const q=e.target.value.toLowerCase();
+  const filteredStates = currentStates.filter(s=>s.name.toLowerCase().includes(q));
+  const filteredTerritories = currentTerritories.filter(t=>t.name.toLowerCase().includes(q));
+  renderCards(filteredStates, grid);
+  renderCards(filteredTerritories, territoriesGrid);
+});
+
+// Sort select
+document.getElementById('sortSelect').addEventListener('change',e=>{
+  if(e.target.value==='alpha'){
+    currentStates.sort((a,b)=>a.name.localeCompare(b.name));
+    currentTerritories.sort((a,b)=>a.name.localeCompare(b.name));
+  } else {
+    currentStates.sort((a,b)=>a.year-b.year);
+    currentTerritories.sort((a,b)=>a.year-b.year);
+  }
+  renderCards(currentStates, grid);
+  renderCards(currentTerritories, territoriesGrid);
+});
+
+window.closeInfo = ()=>infoBox.style.display='none';
+window.showHistory = ()=>historyBox.style.display='block';
+window.closeHistory = ()=>historyBox.style.display='none';
+});
+</script>
+</body>
+</html>
