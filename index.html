@@ -124,7 +124,18 @@
 </style>
 </head>
 <body>
-  <button id="myButton">Click Me</button>
+  <div id="add-state-form">
+    <input id="a-name" placeholder="State Name">
+    <input id="a-abbr" placeholder="Abbreviation">
+    <input id="a-year" type="number" placeholder="Year">
+    <input id="a-flag" placeholder="Flag filename">
+    <textarea id="a-history" placeholder="History"></textarea>
+    <button id="myButton">Add State</button>
+  </div>
+
+  <!-- Container where state tiles will render -->
+  <div id="states-grid"></div>
+
   <header>
     <div>
       <div class="title"><span class="dot"></span> US States — Flags • Year Joined • Brief History</div>
