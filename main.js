@@ -1,5 +1,7 @@
 // main.js
 import { app } from "./firebase.js";
+import { getFirestore, doc, setDoc } from "firebase/firestore"; 
+
 const STATES_BASE = [
   {name:"Delaware", abbr:"DE", year:1787, flag:"delaware.jpg"},
   {name:"Pennsylvania", abbr:"PA", year:1787, flag:"IMG_4160.png"},
@@ -54,16 +56,50 @@ const STATES_BASE = [
   ];
 let STATES = [];
 
-// DOM & Firestore will be ready after this event
 document.addEventListener("DOMContentLoaded", () => {
   console.log("Page loaded. Firebase initialized:", app);
+
+  const db = getFirestore(app);
 
   // Merge base + custom states
   refreshStates();
   renderTiles();
 
-  // Example button
-  const btn = document.getElementById("myButton");
-  if (btn) btn.addEventListener("click", () => alert("Button clicked!"));
-});
+  // Add State button
+  const addBtn = document.getElementById("myButton");
+  if (addBtn) {
+    addBtn.addEventListener("click", async () => {
+      const name = document.getElementById("a-name").value.trim();
+      const abbr = document.getElementById("a-abbr").value.trim().toUpperCase();
+      const year = parseInt(document.getElementById("a-year").value, 10);
+      const flag = document.getElementById("a-flag").value.trim();
+      const history = document.getElementById("a-history").value.trim();
 
+      if (!name || !/^[A-Z]{2}$/.test(abbr) || !year) {
+        alert("Enter a name, 2-letter abbreviation, and year.");
+        return;
+      }
+
+      const newState = { name, abbr, year, flag, history };
+      const idx = STATES.findIndex(s => s.abbr === abbr);
+      if (idx >= 0) STATES[idx] = newState;
+      else STATES.push(newState);
+
+      try {
+        await setDoc(doc(db, "states", abbr), newState);
+        alert(`State ${name} saved!`);
+        renderTiles();
+      } catch (err) {
+        console.error("Firebase save error:", err);
+        alert("Failed to save state.");
+      }
+
+      // Clear form
+      document.getElementById("a-name").value = "";
+      document.getElementById("a-abbr").value = "";
+      document.getElementById("a-year").value = "";
+      document.getElementById("a-flag").value = "";
+      document.getElementById("a-history").value = "";
+    });
+  }
+});
