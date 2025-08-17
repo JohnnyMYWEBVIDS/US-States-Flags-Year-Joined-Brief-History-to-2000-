@@ -12,16 +12,9 @@ const firebaseConfig = {
   measurementId: "G-X9LJ9LY8VH"
 };
 
-import { app, analytics } from "./firebase.js";
+// Initialize Firebase
+const app = initializeApp(firebaseConfig);
+const analytics = getAnalytics(app);
 
-document.addEventListener("DOMContentLoaded", () => {
-  console.log("Page loaded. Firebase initialized:", app);
-
-  // Example: if you had a button
-  const btn = document.getElementById("myButton");
-  if (btn) {
-    btn.addEventListener("click", () => {
-      alert("Button clicked!");
-    });
-  }
-});
+// Export so main.js can use it
+export { app, analytics };
