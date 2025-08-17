@@ -1,4 +1,5 @@
 // main.js
+import { app } from "./firebase.js";
 const STATES_BASE = [
   {name:"Delaware", abbr:"DE", year:1787, flag:"delaware.jpg"},
   {name:"Pennsylvania", abbr:"PA", year:1787, flag:"IMG_4160.png"},
@@ -50,21 +51,19 @@ const STATES_BASE = [
   {name:"Arizona", abbr:"AZ", year:1912, flag:"IMG_4125.png"},
   {name:"Alaska", abbr:"AK", year:1959, flag:"IMG_4124.png"},
   {name:"Hawaii", abbr:"HI", year:1959, flag:"IMG_4133.png"},
-];
+  ];
 let STATES = [];
-refreshStates();
-renderTiles();
 
-import { app } from "./firebase.js";
-
+// DOM & Firestore will be ready after this event
 document.addEventListener("DOMContentLoaded", () => {
   console.log("Page loaded. Firebase initialized:", app);
 
-  // Example button test
+  // Merge base + custom states
+  refreshStates();
+  renderTiles();
+
+  // Example button
   const btn = document.getElementById("myButton");
-  if (btn) {
-    btn.addEventListener("click", () => {
-      alert("Button clicked!");
-    });
-  }
+  if (btn) btn.addEventListener("click", () => alert("Button clicked!"));
 });
+
